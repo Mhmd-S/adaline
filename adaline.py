@@ -28,47 +28,28 @@ class Adaline(object):
     def fit(self, epochs):
 
         for _ in range(epochs):
-            change_w = -self.eta * self.calculate_gradient_descent_w(self.X, self.y)
-            change_b = -self.eta * self.calculate_gradient_descent_b(self.X, self.y)
+            output = self.net_input(self.X)
+            errors = self.y - output
+            
+            change_w = self.eta * (errors * self.X).mean()
+            change_b = -self.eta * errors.mean()
             
             self.weights = self.weights + change_w
-            self.b = self.bias + change_b
-            loss = self.calculate_loss(self.X, self.y)
-            self.losses.append(loss)
+            self.bias = self.bias + change_b
+            self.losses = self.calculate_loss(self.X, self.y)
 
         return self
     
-    def net_input(self, xi):
-        return np.dot(xi, self.weights) + self.bias
+    def net_input(self, X):
+        outputs = []
+        for xi in X:
+            outputs.append(np.dot(xi, self.weights) + self.bias)
+        return outputs
     
     def calculate_loss(self, x, y):
-        loss = 0
-        for xi, target in zip(x,y):
-            z = self.net_input(xi)
-            loss_i = (target - z)**2
-            loss += loss_i
-            
-        return loss/x.shape[0]
-        
-    def calculate_gradient_descent_w(self, x, y):
-        loss = 0
-        for xi, target in zip(x,y):
-            z = self.net_input(xi)
-            for xji in xi:
-                loss_i = (target - z) * xji
-                loss += loss_i
-        gradient_descent = -2 * (loss/len(x))
-        return gradient_descent
-
-            
-    def calculate_gradient_descent_b(self, x, y):
-        loss = 0
-        for xi, target in zip(x,y):
-            z = self.net_input(xi)
-            loss_i = (target - z)
-            loss += loss_i
-        gradient_descent = -2 * (loss/len(x)) 
-        return gradient_descent
+        output = self.net_input(x)
+        loss = ((y-output)**2).mean()
+        return loss
     
     def predict(self, x):
         return np.where(self.net_input(x) >= 0.0, 1, 0)
@@ -78,12 +59,7 @@ class Adaline(object):
         total_predictions = len(x)
         
         for xi, target in zip(x, y):
-            z = np.dot(self.weights, xi) + self.bias
-            
-            if z >= 0.0:
-                prediction = 1
-            else:
-                prediction = 0
+            prediction = self.predict(xi)
             
             if prediction == target:
                 correct_predictions += 1
