@@ -17,7 +17,7 @@ class Adaline(object):
     
     def __init__(self, x, y):
         #  Having it on random does change the learning process
-        self.eta = 0.0001 
+        self.eta = 0.01 
         #self.weights = np.zeros(units) Boundary wont change bcz the weights are all 0
         self.bias = np.float64(0.)
         self.X = x
@@ -28,15 +28,16 @@ class Adaline(object):
     def fit(self, epochs):
 
         for _ in range(epochs):
+            # Got the outputs for all xi
             output = self.net_input(self.X)
             errors = self.y - output
             
-            change_w = self.eta * (errors * self.X).mean()
-            change_b = -self.eta * errors.mean()
+            change_w = self.eta * 2 * (self.X.T.dot(errors) / len(self.X))
+            change_b = self.eta * 2 * errors.mean()
             
-            self.weights = self.weights + change_w
-            self.bias = self.bias + change_b
-            self.losses = self.calculate_loss(self.X, self.y)
+            self.weights += change_w
+            self.bias += change_b
+            self.losses.append(self.calculate_loss(self.X, self.y)) 
 
         return self
     
@@ -52,7 +53,7 @@ class Adaline(object):
         return loss
     
     def predict(self, x):
-        return np.where(self.net_input(x) >= 0.0, 1, 0)
+        return np.where(np.dot(x, self.weights)+ self.bias >= 0.1, 1, 0)
                           
     def test(self, x, y):
         correct_predictions = 0
